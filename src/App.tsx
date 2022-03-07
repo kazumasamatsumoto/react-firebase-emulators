@@ -2,7 +2,11 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import {
+  connectAuthEmulator,
+  getAuth,
+  createUserWithEmailAndPassword,
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseApp = initializeApp({
@@ -13,10 +17,25 @@ const firebaseApp = initializeApp({
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 });
-// const firebaseAuth = getAuth(firebaseApp);
+const auth = getAuth();
+
 // const firebaseFirestore = getFirestore(firebaseApp);
 
 function App() {
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  async function login() {
+    createUserWithEmailAndPassword(
+      auth,
+      'k.matsumoto+01@opening-line.co.jp',
+      'password'
+    )
+      .then((userCredential) => {
+        console.log(userCredential, 'success');
+      })
+      .catch((error) => {
+        console.log(error, 'error');
+      });
+  }
   return (
     <div className="App">
       <header className="App-header">
@@ -32,6 +51,7 @@ function App() {
         >
           Learn React
         </a>
+        <button onClick={() => login()}>エミュレーターテスト</button>
       </header>
     </div>
   );
