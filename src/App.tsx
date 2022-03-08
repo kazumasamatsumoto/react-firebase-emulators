@@ -1,13 +1,26 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp } from 'firebase/app';
 import {
   connectAuthEmulator,
   getAuth,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  doc,
+  setDoc,
+} from 'firebase/firestore';
+import {
+  getStorage,
+  connectStorageEmulator,
+  ref,
+  uploadString,
+} from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import axios from 'axios';
 
 const firebaseApp = initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -18,11 +31,24 @@ const firebaseApp = initializeApp({
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 });
 const auth = getAuth();
-
-// const firebaseFirestore = getFirestore(firebaseApp);
+const db = getFirestore();
+const storage = getStorage();
+const functions = getFunctions(getApp());
 
 function App() {
   connectAuthEmulator(auth, 'http://localhost:9099');
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectStorageEmulator(storage, 'localhost', 9199);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+
+  async function upload() {
+    const storageRef = ref(storage, 'some-child');
+    const message = 'This is my message.';
+    uploadString(storageRef, message).then((snapshot) => {
+      console.log('Uploaded a raw string!');
+    });
+  }
+
   async function login() {
     createUserWithEmailAndPassword(
       auth,
@@ -36,6 +62,15 @@ function App() {
         console.log(error, 'error');
       });
   }
+
+  async function dataSet() {
+    await setDoc(doc(db, 'cities', 'LA'), {
+      name: 'Los Angeles',
+      state: 'CA',
+      country: 'USA',
+    });
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -51,7 +86,9 @@ function App() {
         >
           Learn React
         </a>
-        <button onClick={() => login()}>エミュレーターテスト</button>
+        <button onClick={() => login()}>エミュレーターAuthテスト</button>
+        <button onClick={() => dataSet()}>エミュレーターFirestoreテスト</button>
+        <button onClick={() => upload()}>エミュレーターStorageテスト</button>
       </header>
     </div>
   );
